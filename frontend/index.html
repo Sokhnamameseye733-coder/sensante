@@ -114,6 +114,27 @@
       </div>
 
     </div>
+
+    
+  <!-- Historique des consultations -->
+    <div id="historique-section" class="mt-6 hidden">
+      <div class="bg-white rounded-xl shadow-md p-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">📜 Historique des consultations</h2>
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="bg-gray-50 text-gray-600 text-left">
+              <th class="py-2 px-3">#</th>
+              <th class="py-2 px-3">Âge / Sexe</th>
+              <th class="py-2 px-3">Région</th>
+              <th class="py-2 px-3">Diagnostic</th>
+              <th class="py-2 px-3">Probabilité</th>
+            </tr>
+          </thead>
+          <tbody id="historique-body"></tbody>
+        </table>
+      </div>
+    </div>
+
   </main>
 
   <!-- Footer -->
@@ -125,6 +146,15 @@
   <script>
     // URL de l'API (a changer si l'API est ailleurs)
     const API_URL = "http://localhost:8000";
+
+    const historique = [];
+    
+    const couleurs = {
+        paludisme: { bg: "bg-red-100",    text: "text-red-800",    bar: "bg-red-500",    badge: "bg-red-500",    emoji: "🦟" },
+        grippe:    { bg: "bg-orange-100", text: "text-orange-800", bar: "bg-orange-500", badge: "bg-orange-500", emoji: "🤧" },
+        typhoide:  { bg: "bg-yellow-100", text: "text-yellow-800", bar: "bg-yellow-500", badge: "bg-yellow-500", emoji: "🌡️" },
+        sain:      { bg: "bg-green-100",  text: "text-green-800",  bar: "bg-green-500",  badge: "bg-green-500",  emoji: "✅" }
+    };
 
     async function diagnostiquer() {
         // 1. Recuperer les valeurs du formulaire
@@ -169,11 +199,48 @@
         const resultat = await response.json();
         // 7. Afficher le resultat
         afficherResultat(resultat);
+        // 8. Mettre à jour l'historique
+        ajouterHistorique(patient, resultat);
         } catch (error) {
             afficherErreur(
             "Erreur de connexion : " + error.message);
         }
+
     }
+
+    function ajouterHistorique(patient, resultat) {
+        historique.unshift({
+            age:   patient.age,
+            sexe:  patient.sexe,
+            region: patient.region,
+            diag:  resultat.diagnostic,
+            proba: Math.round(resultat.probabilite * 100)
+        });
+        if (historique.length > 5) historique.pop();
+        renderHistorique();
+    }
+
+    function renderHistorique() {
+        const section = document.getElementById("historique-section");
+        const tbody   = document.getElementById("historique-body");
+        section.classList.remove("hidden");
+
+        tbody.innerHTML = historique.map((h, i) => {
+            const c = couleurs[h.diag] || couleurs["sain"];
+            return `
+            <tr class="border-t border-gray-100 hover:bg-gray-50">
+                <td class="py-2 px-3 text-gray-400">${i + 1}</td>
+                <td class="py-2 px-3 text-gray-700">${h.age} ans / ${h.sexe}</td>
+                <td class="py-2 px-3 text-gray-600">${h.region}</td>
+                <td class="py-2 px-3">
+                    <span class="${c.badge} text-white text-xs px-2 py-1 rounded-full">
+                        ${h.diag}
+                    </span>
+                </td>
+                <td class="py-2 px-3 font-bold ${c.text}">${h.proba}%</td>
+            </tr>`;
+        }).join("");
+    }    
 
     function afficherChargement() {
         const section = document.getElementById("result-section");
@@ -187,13 +254,6 @@
 
     function afficherResultat(r) {
 
-        const couleurs = {
-            palu: {bg:"bg-red-100", text:"text-red-800", bar:"bg-red-500"},
-            grippe: {bg:"bg-orange-100", text:"text-orange-800", bar:"bg-orange-500"},
-            typh: {bg:"bg-yellow-100", text:"text-yellow-800", bar:"bg-yellow-500"},
-            sain: {bg:"bg-green-100", text:"text-green-800", bar:"bg-green-500"}
-        };
-
         const c = couleurs[r.diagnostic] || couleurs["sain"];
         const pct = Math.round(r.probabilite * 100);
 
@@ -206,7 +266,7 @@
 
                 <div class="${c.bg} rounded-lg p-4 mb-4">
                     <p class="text-sm text-gray-600">Diagnostic :</p>
-                    <p class="text-2xl font-bold ${c.text} uppercase mt-1">
+                    <p class="text-2xl font-bold ${c.text} uppercase mt-1">${c.emoji} 
                         ${r.diagnostic}
                     </p>
                 </div>
