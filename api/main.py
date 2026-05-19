@@ -4,6 +4,7 @@
 
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
+from fastapi.middleware.cors import CORSMiddleware
 import joblib
 import numpy as np
 
@@ -38,6 +39,15 @@ le_sexe = joblib.load("models/encoder_sexe.pkl")
 le_region = joblib.load("models/encoder_region.pkl")
 feature_cols = joblib.load("models/feature_cols.pkl")
 print(f"Modele charge : {list(model.classes_)}")
+
+# Autoriser les requetes depuis le frontend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],    # En dev : tout accepter
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # --- Routes ---
 @app.get("/health")
