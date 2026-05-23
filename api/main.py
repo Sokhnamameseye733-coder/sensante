@@ -5,6 +5,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 import joblib
 import numpy as np
 import os
@@ -166,3 +167,6 @@ def explain(data: ExplainInput):
         temperature=0.3
     )
     return ExplainOutput(explication=response.choices[0].message.content)
+
+# Servir le frontend depuis la racine (doit etre en dernier)
+app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
