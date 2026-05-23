@@ -7,6 +7,9 @@ from pydantic import BaseModel, Field
 from fastapi.middleware.cors import CORSMiddleware
 import joblib
 import numpy as np
+import os
+from dotenv import load_dotenv
+from groq import Groq
 
 # --- Schemas Pydantic ---
 class PatientInput(BaseModel):
@@ -24,6 +27,21 @@ class DiagnosticOutput(BaseModel):
     probabilite: float
     confiance: str
     message: str
+
+class ExplainInput(BaseModel):
+    diagnostic: str
+    probabilite: float
+    age: int
+    sexe: str
+    temperature: float
+    region: str
+
+class ExplainOutput(BaseModel):
+    explication: str
+
+# Charger la clé API
+load_dotenv()
+groq_client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 # --- Application FastAPI ---
 app = FastAPI(
@@ -119,3 +137,29 @@ def predict(patient: PatientInput):
         confiance=confiance,
         message=messages.get(diagnostic, "Consultez un medecin.")
     )
+
+@app.post("/explain", response_model=ExplainOutput)
+def explain(data: ExplainInput):
+    sexe_label = "Femme" if data.sexe == "F" else "Homme"
+    prompt = (
+        f"Patient : {sexe_label}, {data.age} ans, région {data.region}\n"
+        f"Température : {data.temperature}°C\n"
+        f"Diagnostic : {data.diagnostic} (probabilité {data.probabilite:.0%})\n"
+        f"Explique ce résultat au patient."
+    )
+    response = groq_client.chat.completions.create(
+        model="llama-3.1-8b-instant",
+        messages=[
+            {
+                "role": "system",
+                "content": "Tu es un assistant médical sénégalais. Explique le diagnostic en français simple, comme un médecin parlerait à son patient. Sois rassurant et recommande une consultation. Maximum 3 phrases."
+            },
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ],
+        max_tokens=200,
+        temperature=0.3
+    )
+    return ExplainOutput(explication=response.choices[0].message.content)

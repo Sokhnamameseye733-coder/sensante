@@ -199,6 +199,7 @@
         const resultat = await response.json();
         // 7. Afficher le resultat
         afficherResultat(resultat);
+        demanderExplication(resultat, patient);
         // 8. Mettre à jour l'historique
         ajouterHistorique(patient, resultat);
         } catch (error) {
@@ -291,10 +292,38 @@
 
                 <div class="bg-gray-50 rounded-lg p-3">
                     <p class="text-sm text-gray-700">${r.message}</p>
-                </div>
+                    <div id="explication-zone" class="mt-4"></div>
+                    </div>
 
             </div>
         `;
+    }
+
+    async function demanderExplication(r, patient) {
+        const zone = document.getElementById("explication-zone");
+        zone.innerHTML = `<p class="text-sm text-purple-400 italic mt-2">⏳ Explication en cours...</p>`;
+        try {
+            const resp = await fetch("http://127.0.0.1:8000/explain", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    diagnostic: r.diagnostic,
+                    probabilite: r.probabilite,
+                    age: patient.age,
+                    sexe: patient.sexe,
+                    temperature: patient.temperature,
+                    region: patient.region
+                })
+            });
+            const data = await resp.json();
+            zone.innerHTML = `
+                <div class="bg-purple-50 border border-purple-200 rounded-lg p-3 mt-2">
+                    <p class="text-xs font-semibold text-purple-500 mb-1">🤖 Explication (Llama 3)</p>
+                    <p class="text-sm text-gray-700">${data.explication}</p>
+                </div>`;
+        } catch (e) {
+        zone.innerHTML = `<p class="text-xs text-gray-400 italic">Explication non disponible.</p>`;
+        }
     }
 
     function afficherErreur(msg) {
