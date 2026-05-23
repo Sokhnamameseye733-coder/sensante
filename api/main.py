@@ -41,7 +41,8 @@ class ExplainOutput(BaseModel):
 
 # Charger la clé API
 load_dotenv()
-groq_client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+api_key = os.getenv("GROQ_API_KEY")
+groq_client = Groq(api_key=api_key) if api_key else None
 
 # --- Application FastAPI ---
 app = FastAPI(
@@ -147,6 +148,8 @@ def explain(data: ExplainInput):
         f"Diagnostic : {data.diagnostic} (probabilité {data.probabilite:.0%})\n"
         f"Explique ce résultat au patient."
     )
+    if not groq_client:
+        return ExplainOutput(explication="Service d'explication indisponible. Clé API non configurée.")
     response = groq_client.chat.completions.create(
         model="llama-3.1-8b-instant",
         messages=[
