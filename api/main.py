@@ -155,7 +155,7 @@ def explain(data: ExplainInput):
         messages=[
             {
                 "role": "system",
-                "content": "Tu es un assistant médical sénégalais. Explique le diagnostic en français simple, comme un médecin parlerait à son patient. Sois rassurant et recommande une consultation. Maximum 3 phrases."
+                "content": "Tu es un assistant médical sénégalais. Explique le diagnostic en wolof simple, mélangé de français si nécessaire, comme un médecin parlerait à son patient à Dakar. Sois rassurant et recommande une consultation. Maximum 3 phrases."
             },
             {
                 "role": "user",
