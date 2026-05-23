@@ -4,9 +4,6 @@ __pycache__/
 venv/
 .env
 
-# Modele ML (trop gros pour GitHub)
-models/*.pkl
-
 # Fichiers OS
 .DS_Store
 Thumbs.db
