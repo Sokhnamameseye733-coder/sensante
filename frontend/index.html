@@ -145,7 +145,7 @@
   <!-- JavaScript -->
   <script>
     // URL de l'API (a changer si l'API est ailleurs)
-    const API_URL = "http://localhost:8000";
+    const API_URL = "";
 
     const historique = [];
     
@@ -303,7 +303,7 @@
         const zone = document.getElementById("explication-zone");
         zone.innerHTML = `<p class="text-sm text-purple-400 italic mt-2">⏳ Explication en cours...</p>`;
         try {
-            const resp = await fetch("http://127.0.0.1:8000/explain", {
+            const resp = await fetch(API_URL + "/explain", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
