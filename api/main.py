@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel, Field
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 import joblib
 import numpy as np
 import os
@@ -168,5 +169,13 @@ def explain(data: ExplainInput):
     )
     return ExplainOutput(explication=response.choices[0].message.content)
 
-# Servir le frontend depuis la racine (doit etre en dernier)
-app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
+# Servir les fichiers statiques du frontend
+app.mount("/static", StaticFiles(directory="frontend"), name="static")
+
+@app.get("/")
+async def serve_index():
+    return FileResponse("frontend/index.html")
+
+@app.get("/{full_path:path}")
+async def serve_frontend(full_path: str):
+    return FileResponse("frontend/index.html")
